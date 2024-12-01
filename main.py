@@ -4,7 +4,6 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from passlib.context import CryptContext
-from typing import List
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy import text
@@ -91,19 +90,28 @@ def logout(request: Request):
     return RedirectResponse(url="/login", status_code=303)
 
 
-@app.get("/db/{user_id}/view/{view}")
+@app.get("/view/{view}")
 def print_data(
         request: Request,
-        user_id: int,
         view: str,
         db: Session = Depends(get_db),
         is_auth: bool = Depends(require_auth),
 ):
     if is_auth:
         # Проверяем доступность представления
-        allowed_views = ["Client_Race_Info", "Client_Booking_History", "Organizer_Race_Schedule_Results", "Organizer_Race_Booking_Overview", "Technical_Kart_Status_Maintenance", "Technical_Kart_Last_Race"]
-        if view not in allowed_views:
-            raise HTTPException(status_code=404, detail="View not found")
+        client_views = ["Client_Race_Info", "Client_Booking_History"]
+        organizer_views = ["Organizer_Race_Schedule_Results", "Organizer_Race_Booking_Overview"]
+        tech_views = ["Technical_Kart_Status_Maintenance", "Technical_Kart_Last_Race"]
+
+        # Получаем текущего пользователя из сессии
+        user = request.session.get("user")
+
+        if (view not in client_views) and (user.get("role") == "Клиент"):
+            raise HTTPException(status_code=404, detail="Представление не найдено или вы не имеете право")
+        elif (view not in organizer_views) and (user.get("role") == "Организатор"):
+            raise HTTPException(status_code=404, detail="Представление не найдено или вы не имеете право")
+        elif (view not in tech_views) and (user.get("role") == "Технический персонал"):
+            raise HTTPException(status_code=404, detail="Представление не найдено или вы не имеете право")
 
         # Выполняем запрос к представлению
         query = text(f"""SELECT * FROM {view}""")
@@ -115,9 +123,6 @@ def print_data(
 
         # Преобразуем результат в список словарей
         data = [dict(zip(columns, row)) for row in result.fetchall()]
-
-        # Получаем текущего пользователя из сессии
-        user = request.session.get("user")
 
         # Возвращаем данные в шаблон
         return templates.TemplateResponse(

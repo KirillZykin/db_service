@@ -11,7 +11,7 @@
         <h2>Тебе доступны:</h2>
         <ul>
             {% for view in views %}
-            <li onclick="window.location.href='/db/{{ user.id }}/view/{{ view }}'">{{ view }}</li>
+            <li onclick="window.location.href='/view/{{ view }}'">{{ view }}</li>
             {% endfor %}
         </ul>
         {% else %}
