@@ -1,146 +1,73 @@
 /* Общие стили */
-* {
+body {
+    font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-
-body {
-    background-color: #f5f5f5;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    padding: 20px;
-}
-
-/* Контейнер для размещения секций */
-.container {
-    width: 100%;
-    max-width: 600px;
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    margin-top: 20px;
-}
-
-/* Стили для заголовков */
-h1, h2 {
-    color: #333;
-    margin-bottom: 15px;
-}
-
-.header h1 {
-    text-align: center;
-}
-
-/* Стили для форм */
-.form-container {
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-input[type="text"], input[type="password"] {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
     background-color: #f9f9f9;
+    color: #333;
 }
 
-button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 15px;
-    background-color: #4a90e2;
-    color: #ffffff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-button:hover {
-    background-color: #357abd;
-}
-
-/* Стили для списка комнат */
-.rooms-list {
-    margin-top: 20px;
+h1, h2 {
     text-align: center;
+    color: #444;
 }
 
-.rooms-list ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.rooms-list li {
-    padding: 10px;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    background-color: #fafafa;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.button-group {
-    display: flex;
-    gap: 5px;
-}
-
-.logout-button {
-    color: #fff;
-    background-color: #d9534f;
-    border: none;
-    border-radius: 4px;
-    text-decoration: none;
-    cursor: pointer;
-    width: 100%;
-    padding: 10px;
-    margin-top: 15px;
-    font-size: 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.logout-button:hover {
-    background-color: #c9302c;
-}
-
-.welcome-container {
+/* Контейнеры форм */
+.form-container {
     max-width: 400px;
-    text-align: center;
-    margin-top: 50px;
+    margin: 50px auto;
     padding: 20px;
-    background-color: #ffffff;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
-/* Стили для найденных чатов */
-#foundChats {
-    list-style-type: none;
-    padding: 0;
-    margin-top: 10px;
+.form-container h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
 }
 
-.chat-item {
+.form-container form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form-container label {
+    margin: 10px 0 5px;
+    font-size: 14px;
+    align-self: flex-start;
+}
+
+.form-container input, .form-container select, .form-container button {
+    width: 100%;
     padding: 10px;
-    border: 1px solid #e0e0e0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    border: 1px solid #ddd;
     border-radius: 4px;
-    margin-bottom: 10px;
-    background-color: #fafafa;
+    box-sizing: border-box;
+}
+
+.form-container button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
-.chat-item:hover {
-    background-color: #f0f0f0;
+.form-container button:hover {
+    background-color: #0056b3;
+}
+
+.form-container a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.form-container a:hover {
+    text-decoration: underline;
 }
