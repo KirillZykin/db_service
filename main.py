@@ -1,6 +1,13 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request, Form
+from sqlalchemy import false
 from sqlalchemy.orm import Session
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from passlib.context import CryptContext
 from typing import List
+from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
 
 import database, schemas, crud
 from database import engine, SessionLocal
@@ -10,7 +17,13 @@ database.Base.metadata.create_all(bind=engine)
 
 # Инициализация FastAPI
 app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key="your-secret-key")
+templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="templates/static"), name="static")
 
+# Пароли
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Зависимость для получения сессии базы данных
 def get_db():
@@ -20,6 +33,55 @@ def get_db():
     finally:
         db.close()
 
+# Проверка авторизации
+def require_auth(request: Request) -> bool:
+    user = request.session.get("user")
+    if user is None:
+        return False
+    return True
+
+# --- Пользовательские маршруты ---
+@app.get("/register", response_class=HTMLResponse)
+def register_form(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+@app.post("/register")
+def register_user(username: str = Form(...), password: str = Form(...), role: str = Form(...), db: Session = Depends(get_db)):
+    hashed_password = pwd_context.hash(password)
+    user = schemas.UserCreate(username=username, hashed_password=hashed_password, role=role)
+    if crud.get_user_by_username(db, username):
+        raise HTTPException(status_code=400, detail="Username already registered")
+    crud.create_user(db, user)
+    return RedirectResponse(url="/login", status_code=303)
+
+@app.post("/login")
+def login_user(
+        request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+):
+    user = crud.get_user_by_username(db, form_data.username)
+    if not user or not pwd_context.verify(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+    # Сохраняем пользователя в сессии
+    request.session["user"] = {"id": user.id, "username": user.username, "role": user.role}
+    return RedirectResponse(url="/", status_code=303)
+
+@app.get("/login", response_class=HTMLResponse)
+def login_form(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request, is_auth: bool = Depends(require_auth)):
+    if is_auth:
+        user = request.session.get("user")
+        return templates.TemplateResponse("index.html", {"request": request, "user": user})
+    else:
+        return RedirectResponse(url="/login", status_code=303)
+
+@app.get("/logout")
+def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=303)
 
 # --- Routes for Client ---
 @app.post("/clients/", response_model=schemas.ClientResponse)
@@ -28,17 +90,22 @@ def create_client(client: schemas.ClientCreate, db: Session = Depends(get_db)):
 
 
 @app.get("/clients/", response_model=List[schemas.ClientResponse])
-def read_clients(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    return crud.get_clients(db=db, skip=skip, limit=limit)
+def read_clients(skip: int = 0, limit: int = 10, db: Session = Depends(get_db), is_auth: bool = Depends(require_auth)):
+    if is_auth:
+        return crud.get_clients(db=db, skip=skip, limit=limit)
+    else:
+        return RedirectResponse(url="/login", status_code=303)
 
 
 @app.get("/clients/{client_id}", response_model=schemas.ClientResponse)
-def read_client(client_id: int, db: Session = Depends(get_db)):
-    client = crud.get_client(db=db, client_id=client_id)
-    if not client:
-        raise HTTPException(status_code=404, detail="Client not found")
-    return client
-
+def read_client(client_id: int, db: Session = Depends(get_db), is_auth: bool = Depends(require_auth)):
+    if is_auth:
+        client = crud.get_client(db=db, client_id=client_id)
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        return client
+    else:
+        return RedirectResponse(url="/login", status_code=303)
 
 @app.delete("/clients/{client_id}", response_model=schemas.ClientResponse)
 def delete_client(client_id: int, db: Session = Depends(get_db)):

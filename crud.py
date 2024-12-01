@@ -1,6 +1,16 @@
 from sqlalchemy.orm import Session
 import database, schemas
 
+def get_user_by_username(db: Session, username: str):
+    return db.query(database.User).filter(database.User.username == username).first()
+
+def create_user(db: Session, user: schemas.UserCreate):
+    db_user = database.User(username=user.username, hashed_password=user.hashed_password, role=user.role)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
 # Client CRUD
 def create_client(db: Session, client: schemas.ClientCreate):
     db_client = database.Client(**client.dict())

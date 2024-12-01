@@ -2,6 +2,19 @@ from pydantic import BaseModel
 from datetime import date, datetime, timedelta
 from typing import Optional, List
 
+class UserBase(BaseModel):
+    username: str
+    role: str
+
+class UserCreate(UserBase):
+    hashed_password: str
+
+class UserResponse(UserBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
 # Client Schemas
 class ClientCreate(BaseModel):
     name: str
